@@ -1,0 +1,16 @@
+#python specific
+*.pyc
+__pycache__
+
+#emacs specific
+\#*\#
+
+## generic files to ignore
+*~
+*.lock
+*.DS_Store
+*.swp
+*.log
+*.out
+
+# Project specific

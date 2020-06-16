@@ -3,9 +3,9 @@ import sympy as sp
 import numpy as np
 import picos as pic
 
-from util import *
-from basis import basis_hom, basis_inhom, Basis
-from SoS import SOSProblem
+from .util import *
+from .basis import basis_hom, basis_inhom, Basis
+from .SoS import SOSProblem
 
 class TestBasis(unittest.TestCase):
     def test_basis_generator(self):
@@ -88,7 +88,8 @@ class TestSoS(unittest.TestCase):
         tv = prob.sym_to_var(t)
         prob.set_objective('max', tv)
         prob.solve(solver='cvxopt', verbosity=0)
-        self.assertAlmostEqual(tv.value, -0.1725688562256166)
+        # Less figures to compare since cvxopt is less precise
+        self.assertAlmostEqual(tv.value, -0.1725688562256166, places=3)
 
     def test_isocahedral_form(self):
         x, y, z, t = sp.symbols('x y z t')

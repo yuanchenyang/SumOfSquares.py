@@ -2,7 +2,7 @@ import sympy as sp
 import math
 from collections import defaultdict
 
-from util import *
+from .util import *
 
 def basis_hom(n, d):
     '''Generator for a homogeneous polynomial basis for n variables of degree d,

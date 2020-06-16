@@ -3,9 +3,8 @@ import sympy as sp
 import numpy as np
 import picos as pic
 
-from .util import *
-from .basis import basis_hom, basis_inhom, Basis
-from .SoS import SOSProblem
+from SumOfSquares import *
+from SumOfSquares.util import binom
 
 class TestBasis(unittest.TestCase):
     def test_basis_generator(self):

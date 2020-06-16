@@ -3,16 +3,19 @@ import sympy as sp
 import numpy as np
 from picos import Problem
 from collections import defaultdict
+from operator import floordiv, and_
 
-from util import *
-from basis import Basis
+from .util import *
+from .basis import Basis
 
 class SOSProblem(Problem):
-    # Ref: https://gitlab.com/picos-api/picos/-/issues/138
     '''Defines an Sum of Squares problem, a subclass of picos.Problem.
+    (also see: https://gitlab.com/picos-api/picos/-/issues/138 for an
+    implementation that also extends picos.Problem)
     '''
     def __init__(self, *args, **kwargs):
-        '''Takes same arguments as picos.Problem'''
+        '''Takes same arguments as picos.Problem
+        '''
         Problem.__init__(self, *args, **kwargs)
         self._sym_var_map = {}
         self._sos_constraints = {}
@@ -22,14 +25,16 @@ class SOSProblem(Problem):
     def sym_to_var(self, sym):
         '''Map between a sympy symbol to a unique picos variable. As sympy
         symbols are hashable, each symbol is assigned a unique picos variable.
-        A new picos variable is created if it previously doesn't exist.'''
+        A new picos variable is created if it previously doesn't exist.
+        '''
         if sym not in self._sym_var_map:
             self._sym_var_map[sym] = pic.RealVariable(repr(sym))
         return self._sym_var_map[sym]
 
     def sp_to_picos(self, expr):
         '''Converts a sympy affine expression to a picos expression, converting
-        numeric values to floats, and sympy symbols to picos variables. '''
+        numeric values to floats, and sympy symbols to picos variables.
+        '''
         if expr.func == sp.Symbol:
             return self.sym_to_var(expr)
         elif expr.func == sp.Add:
@@ -37,7 +42,16 @@ class SOSProblem(Problem):
         elif expr.func == sp.Mul:
             return prod(map(self.sp_to_picos, expr.args))
         else:
-            return float(expr)
+            return pic.Constant(float(expr))
+
+    def sp_mat_to_picos(self, mat):
+        '''Converts a sympy matrix a picos affine expression, converting
+        numeric values to floats, and sympy symbols to picos variables.
+        '''
+        num_rows, num_cols = mat.shape
+        # Use picos operator overloading
+        return reduce(floordiv, [reduce(and_, map(self.sp_to_picos, mat.row(r)))
+                                 for r in range(num_rows)])
 
     def add_sos_constraint(self, expr, variables, name=''):
         '''Adds a constraint that the polynomial EXPR is a Sum-of-Squares. EXPR
@@ -97,7 +111,7 @@ class SOSProblem(Problem):
         def pexpect(p):
             poly = sp.poly(p, variables)
             basis.check_can_represent(poly)
-            return np.array(basis.sos_sym_poly_repr(poly), dtype=float) | X
+            return self.sp_mat_to_picos(basis.sos_sym_poly_repr(poly)) | X
         return pexpect
 
 class SOSConstraint:
@@ -138,7 +152,7 @@ class SOSConstraint:
         return round_sympy_expr(S, precision)
 
     def pexpect(self, expr):
-        '''Computes the pseudoexpectation of a given polynomial'''
+        '''Computes the pseudoexpectation of a given polynomial EXPR'''
         poly = sp.poly(expr, self.symbols)
         self.basis.check_can_represent(poly)
         Qp = self.basis.sos_sym_poly_repr(poly)

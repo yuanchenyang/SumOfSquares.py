@@ -6,7 +6,7 @@ from collections import defaultdict
 from operator import floordiv, and_
 
 from .util import *
-from .basis import Basis
+from .basis import Basis, poly_variable
 
 class SOSProblem(Problem):
     '''Defines an Sum of Squares problem, a subclass of picos.Problem.
@@ -113,6 +113,29 @@ class SOSProblem(Problem):
             basis.check_can_represent(poly)
             return self.sp_mat_to_picos(basis.sos_sym_poly_repr(poly)) | X
         return pexpect
+
+def poly_opt_prob(vars, obj, eqs, ineqs, deg):
+    '''Formulates and returns a degree DEG Sum-of-Squares relaxation of a
+    polynomial optimization problem in variables VARS that mininizes OBJ
+    subject to equality constraints EQS (g(x) = 0) and inequality constraints
+    INEQS (h(x) >= 0). Returns an instance of SOSProblem.
+    '''
+    prob = SOSProblem()
+    gamma = sp.symbols('gamma')
+    gamma_p = prob.sym_to_var(gamma)
+
+    f = 0 # obviously non-negative polynomial for (in)equalities constraints
+    for i, eq in enumerate(eqs):
+        p = poly_variable(f'c{i}', vars, 2*deg - poly_degree(eq, vars))
+        f += p * eq
+    for i, ineq in enumerate(ineqs):
+        s = poly_variable(f'd{i}', vars, 2*deg - poly_degree(eq, vars))
+        prob.add_sos_constraint(s, vars, name=f'd{i}')
+        f += s * ineq
+
+    prob.add_sos_constraint(obj - gamma - f, vars)
+    prob.set_objective('max', gamma_p)
+    return prob
 
 class SOSConstraint:
     '''Defines a Sum-of-Squares constraint, returned by

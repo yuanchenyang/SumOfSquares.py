@@ -119,5 +119,22 @@ class TestSoS(unittest.TestCase):
         prob.solve(solver='mosek')
         self.assertAlmostEqual(PEx(f), 0.8472136281136226)
 
+    def test_eq_constrained_poly_opt(self):
+        x, y = sp.symbols('x y')
+        prob = poly_opt_prob([x, y], x - y, [x**2-x, y**2-y], [], 1)
+        prob.solve(solver='mosek')
+        self.assertAlmostEqual(prob.value, -1.0000000022528606)
+
+    def test_ineq_constrained_poly_opt(self):
+        x, y = sp.symbols('x y')
+        prob1 = poly_opt_prob([x, y], x + y, [x**2+y**2-1, y-x**2-0.5], [x, y-0.5], 1)
+        prob1.solve(solver='mosek')
+        self.assertAlmostEqual(prob1.value, 0.49999999888338087)
+
+        prob2 = poly_opt_prob([x, y], x + y, [x**2+y**2-1, y-x**2-0.5], [x, y-0.5], 2)
+        prob2.solve(solver='mosek')
+        self.assertAlmostEqual(prob2.value, 1.3910970905754896)
+
+
 if __name__ == '__main__':
     unittest.main()

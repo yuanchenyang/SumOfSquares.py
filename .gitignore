@@ -14,3 +14,5 @@ __pycache__
 *.out
 
 # Project specific
+/Untitled.ipynb
+/.ipynb_checkpoints/

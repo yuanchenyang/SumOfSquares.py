@@ -23,3 +23,7 @@ def is_hom(poly, deg):
 def round_sympy_expr(expr, precision=3):
     '''Rounds all numbers in a sympy expression to stated precision'''
     return expr.xreplace({n : round(n, precision) for n in expr.atoms(sp.Number)})
+
+def poly_degree(p, variables):
+    '''Returns the max degree of P when treated as a polynomial in VARIABLES'''
+    return sp.poly(p, variables).total_degree()

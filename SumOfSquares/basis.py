@@ -93,3 +93,15 @@ class Basis():
             for i, j in entries:
                 Qp[i,j] = coeff/len(entries)
         return Qp
+
+
+def poly_variable(name, variables, deg, hom=False):
+    '''Returns a (possibly homogeneous) degree DEG polynomial in VARIABLES,
+    with a variable (a sympy symbol) named using NAME for each coefficient. Used
+    in Sum-of-Squares relaxations for polynomial optimization.
+    '''
+    variables = sorted(variables, key=str) # use lex order
+    basis = Basis.from_degree(len(variables), deg, hom=hom)
+    coeffs = sp.symbols(f'{name}_:{len(basis)}')
+    return sum(coeff * prod(var**power for var, power in zip(variables, monom))
+               for monom, coeff in zip(basis, coeffs))

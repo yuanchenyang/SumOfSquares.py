@@ -1,5 +1,5 @@
-Python implementation of Sum-of-Squares optimization
-----------------------------------------------------
+SumOfSquares.py
+---------------
 
 Sum of squares optimization built on top of
 [picos](https://picos-api.gitlab.io/picos/). Easy access to pseudoexpectation

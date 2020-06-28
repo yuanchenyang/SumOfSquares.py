@@ -1,3 +1,4 @@
+import math
 import picos as pic
 import sympy as sp
 import numpy as np
@@ -114,7 +115,7 @@ class SOSProblem(Problem):
             return self.sp_mat_to_picos(basis.sos_sym_poly_repr(poly)) | X
         return pexpect
 
-def poly_opt_prob(vars, obj, eqs, ineqs, deg):
+def poly_opt_prob(vars, obj, eqs=None, ineqs=None, deg=None):
     '''Formulates and returns a degree DEG Sum-of-Squares relaxation of a
     polynomial optimization problem in variables VARS that mininizes OBJ
     subject to equality constraints EQS (g(x) = 0) and inequality constraints
@@ -123,6 +124,14 @@ def poly_opt_prob(vars, obj, eqs, ineqs, deg):
     prob = SOSProblem()
     gamma = sp.symbols('gamma')
     gamma_p = prob.sym_to_var(gamma)
+    eqs, ineqs = eqs or [], ineqs or []
+
+    max_deg = max(map(lambda p: sp.poly(p, vars).total_degree(), [obj] + eqs + ineqs))
+    if deg is None:
+        deg = math.ceil(max_deg/2)
+    if 2*deg < max_deg:
+        raise ValueError(f'Degree of relaxation 2*{deg} less than maximum degree {max_deg}')
+
 
     f = 0 # obviously non-negative polynomial for (in)equalities constraints
     for i, eq in enumerate(eqs):

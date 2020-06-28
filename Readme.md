@@ -6,4 +6,6 @@ Sum of squares optimization built on top of
 operators for both formulating problems and extracting solutions via rounding
 algorithms.
 
-(detailed documentation to come)
+[Examples](https://sums-of-squares.github.io/sos/index.html#python)
+
+(Detailed documentation coming soon)

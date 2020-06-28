@@ -16,3 +16,4 @@ __pycache__
 # Project specific
 /Untitled.ipynb
 /.ipynb_checkpoints/
+/build/

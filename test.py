@@ -106,6 +106,25 @@ class TestSoS(unittest.TestCase):
         self.assertAlmostEqual(c.pexpect((x**2 + y**2 + z**2)**3), 1)
         self.assertAlmostEqual(c.pexpect(f), 0.8472135957347698)
 
+    def test_chebyshev(self):
+        # Compute leading coefficient of Chebyshev polynomials
+        deg = 8
+        x, gam = sp.symbols('x gam')
+        p = gam * x**deg + poly_variable('p1', [x], deg-1)
+        prob = SOSProblem()
+
+        # -1 <= p <= 1 on interval [-1, 1]
+        t1 = poly_variable('t1', [x], deg-2)
+        t2 = poly_variable('t2', [x], deg-2)
+        prob.add_sos_constraint(t1, [x])
+        prob.add_sos_constraint(t2, [x])
+        prob.add_sos_constraint(1-p + (x+1)*(x-1)*t1, [x])
+        prob.add_sos_constraint(p+1 + (x+1)*(x-1)*t2, [x])
+
+        prob.set_objective('max', prob.sym_to_var(gam))
+        prob.solve(solver='mosek')
+        self.assertAlmostEqual(prob.value, 127.99999971712037)
+
     def test_pexpect(self):
         x, y, z = sp.symbols('x y z')
         phi = (1+np.sqrt(5))/2
@@ -118,6 +137,16 @@ class TestSoS(unittest.TestCase):
         prob.set_objective('max', PEx(f))
         prob.solve(solver='mosek')
         self.assertAlmostEqual(PEx(f), 0.8472136281136226)
+
+    def test_pexpect_cert(self):
+        # Pseudoexpectation certificate
+        x, y = sp.symbols('x y')
+        p = x**4*y**2 + x**2*y**4 - 3*x**2*y**2 + 1 # Motzkin polynomial
+        prob = SOSProblem()
+        pEx = prob.get_pexpect([x, y], 6)
+        prob.add_constraint(pEx(p) == -1)
+        prob.solve()
+        self.assertAlmostEqual(pEx(p), -1)
 
     def test_eq_constrained_poly_opt(self):
         x, y = sp.symbols('x y')

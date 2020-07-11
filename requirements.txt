@@ -1,4 +1,4 @@
 sympy
 numpy
+scipy
 picos
-#scipy

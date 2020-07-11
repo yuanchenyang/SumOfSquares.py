@@ -2,6 +2,8 @@ import sympy as sp
 import numpy as np
 import math
 from collections import defaultdict
+from scipy.spatial import ConvexHull
+from scipy.linalg import orth
 
 from .util import *
 
@@ -59,11 +61,9 @@ class Basis():
         monoms = np.array(poly.monoms())/2
         full_basis = Basis.from_degree(len(poly.gens), math.ceil(poly_deg / 2),
                                        is_hom(poly, poly_deg))
-        if sparse and len(monoms) >= 3: # Newton polytope reduction
-            from scipy.spatial import ConvexHull
-            from scipy.linalg import orth
-            # First project onto affine subspace spanned by monomials
+        if sparse and len(monoms) >= 3: # Newton polytope sparsity reduction
             a = np.mean(monoms, axis=0)
+            # Project onto affine subspace spanned by monomials
             proj = lambda m: orth((monoms - a).T).T.dot(m - a)
             hull = ConvexHull(np.apply_along_axis(proj, 1, monoms))
             in_hull = lambda pt: \

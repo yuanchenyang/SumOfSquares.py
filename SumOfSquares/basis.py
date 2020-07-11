@@ -1,4 +1,5 @@
 import sympy as sp
+import numpy as np
 import math
 from collections import defaultdict
 
@@ -51,14 +52,20 @@ class Basis():
         '''Constructs a basis by specifying the number of variables and degree'''
         return Basis(list((basis_hom if hom else basis_inhom)(nvars, deg)))
 
-    def from_poly_lex(poly):
+    def from_poly_lex(poly, sparse=True):
         '''Returns a basis from a polynomial compatible with SoS,
         ordering monomials in lexicographic order'''
-        # TODO: add newton polytope support
         poly_deg = poly.total_degree()
-        return Basis.from_degree(len(poly.gens),
-                                 math.ceil(poly_deg / 2),
-                                 is_hom(poly, poly_deg))
+        full_basis = Basis.from_degree(len(poly.gens), math.ceil(poly_deg / 2),
+                                       is_hom(poly, poly_deg))
+        if sparse: # Newton polytope reduction
+            from scipy.spatial import ConvexHull
+            hull = ConvexHull(np.array(poly.monoms())/2)
+            A = hull.equations[:,:-1]
+            b = hull.equations[:,-1:].flatten()
+            in_hull = lambda pt: sum(A.dot(pt) + b > 0) == 0
+            return Basis(list(filter(in_hull, full_basis.monoms)))
+        return full_basis
 
     def to_sym(self, syms):
         '''Convert basis to a list of symbolic monomials

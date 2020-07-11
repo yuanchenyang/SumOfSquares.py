@@ -79,16 +79,15 @@ class TestSoS(unittest.TestCase):
         prob.solve(solver='mosek')
         self.assertAlmostEqual(tv.value, 0.24999999503912618)
 
-    def test_unconstrained_poly_opt(self):
+    def test_unconstrained_poly_opt_sparse(self):
         x, y, t = sp.symbols('x y t')
         p = x**4 + x**2 - 3*x**2*y**2 + y**6
         prob = SOSProblem()
-        prob.add_sos_constraint(p-t, [x, y])
+        c = prob.add_sos_constraint(p-t, [x, y], sparse=True) # Newton polytope
         tv = prob.sym_to_var(t)
         prob.set_objective('max', tv)
-        prob.solve(solver='cvxopt', verbosity=0)
-        # Less figures to compare since cvxopt is less precise
-        self.assertAlmostEqual(tv.value, -0.1725688562256166, places=3)
+        prob.solve(solver='mosek', verbosity=0)
+        self.assertAlmostEqual(tv.value, -0.17797853649283987)
 
     def test_isocahedral_form(self):
         x, y, z, t = sp.symbols('x y z t')

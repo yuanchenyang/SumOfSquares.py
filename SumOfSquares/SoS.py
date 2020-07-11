@@ -54,12 +54,13 @@ class SOSProblem(Problem):
         return reduce(floordiv, [reduce(and_, map(self.sp_to_picos, mat.row(r)))
                                  for r in range(num_rows)])
 
-    def add_sos_constraint(self, expr, variables, name=''):
+    def add_sos_constraint(self, expr, variables, name='', sparse=False):
         '''Adds a constraint that the polynomial EXPR is a Sum-of-Squares. EXPR
         is a sympy expression treated as a polynomial in VARIABLES. Any symbols
         in EXPR not in VARIABLES are converted to picos variables
         (see SOSProblem.sym_to_var). Can optionally name the constraint with
-        NAME. Returns a SOSConstraint object.
+        NAME. SPARSE uses Newton polytope reduction to do computations in a
+        reduced-size basis. Returns a SOSConstraint object.
         '''
         self._sos_const_count += 1
         name = name or f'_Q{self._sos_const_count}'
@@ -70,7 +71,7 @@ class SOSProblem(Problem):
 
         hom = is_hom(poly, deg)
         mono_to_coeffs = dict(zip(poly.monoms(), map(self.sp_to_picos, poly.coeffs())))
-        basis = Basis.from_poly_lex(poly)
+        basis = Basis.from_poly_lex(poly, sparse=sparse)
 
         Q = pic.SymmetricVariable(name, len(basis))
         for mono, pairs in basis.sos_sym_entries.items():

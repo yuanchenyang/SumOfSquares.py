@@ -62,9 +62,7 @@ class Basis():
         if sparse and len(monoms) >= 3: # Newton polytope reduction
             from scipy.spatial import ConvexHull
             hull = ConvexHull(np.array(monoms)/2)
-            A = hull.equations[:,:-1]
-            b = hull.equations[:,-1:].flatten()
-            in_hull = lambda pt: sum(A.dot(pt) + b > 0) == 0
+            in_hull = lambda pt: sum(hull.equations.dot(pt + (1,)) > 0) == 0
             return Basis(list(filter(in_hull, full_basis.monoms)))
         return full_basis
 

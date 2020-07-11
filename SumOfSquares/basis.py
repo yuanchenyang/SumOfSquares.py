@@ -56,11 +56,12 @@ class Basis():
         '''Returns a basis from a polynomial compatible with SoS,
         ordering monomials in lexicographic order'''
         poly_deg = poly.total_degree()
+        monoms = poly.monoms()
         full_basis = Basis.from_degree(len(poly.gens), math.ceil(poly_deg / 2),
                                        is_hom(poly, poly_deg))
-        if sparse: # Newton polytope reduction
+        if sparse and len(monoms) >= 3: # Newton polytope reduction
             from scipy.spatial import ConvexHull
-            hull = ConvexHull(np.array(poly.monoms())/2)
+            hull = ConvexHull(np.array(monoms)/2)
             A = hull.equations[:,:-1]
             b = hull.equations[:,-1:].flatten()
             in_hull = lambda pt: sum(A.dot(pt) + b > 0) == 0

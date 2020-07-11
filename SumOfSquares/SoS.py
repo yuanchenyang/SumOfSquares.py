@@ -116,11 +116,12 @@ class SOSProblem(Problem):
             return self.sp_mat_to_picos(basis.sos_sym_poly_repr(poly)) | X
         return pexpect
 
-def poly_opt_prob(vars, obj, eqs=None, ineqs=None, deg=None):
+def poly_opt_prob(vars, obj, eqs=None, ineqs=None, deg=None, sparse=True):
     '''Formulates and returns a degree DEG Sum-of-Squares relaxation of a
     polynomial optimization problem in variables VARS that mininizes OBJ
     subject to equality constraints EQS (g(x) = 0) and inequality constraints
-    INEQS (h(x) >= 0). Returns an instance of SOSProblem.
+    INEQS (h(x) >= 0). SPARSE uses Newton polytope reduction to do computations
+    in a reduced-size basis. Returns an instance of SOSProblem.
     '''
     prob = SOSProblem()
     gamma = sp.symbols('gamma')
@@ -140,10 +141,10 @@ def poly_opt_prob(vars, obj, eqs=None, ineqs=None, deg=None):
         f += p * eq
     for i, ineq in enumerate(ineqs):
         s = poly_variable(f'd{i}', vars, 2*deg - poly_degree(eq, vars))
-        prob.add_sos_constraint(s, vars, name=f'd{i}')
+        prob.add_sos_constraint(s, vars, name=f'd{i}', sparse=sparse)
         f += s * ineq
 
-    prob.add_sos_constraint(obj - gamma - f, vars)
+    prob.add_sos_constraint(obj - gamma - f, vars, sparse=sparse)
     prob.set_objective('max', gamma_p)
     return prob
 

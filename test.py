@@ -61,8 +61,9 @@ class TestSoS(unittest.TestCase):
             - y**4 - x**2 - y**2 + 1
         prob = SOSProblem()
         prob.add_sos_constraint(p, [x, y])
-        sv, tv = prob.sym_to_var(s), prob.sym_to_var(t)
-        prob.set_objective('min', 2*sv+tv)
+        sv = prob.sym_to_var(s)
+        tv = prob.sym_to_var(t)
+        prob.set_objective('min', 2*sv + tv)
         prob.solve(solver='mosek')
         self.assertAlmostEqual(sv.value, 1.0991855923132654)
         self.assertAlmostEqual(tv.value, 1.349190696633841)
@@ -74,20 +75,31 @@ class TestSoS(unittest.TestCase):
         prob = SOSProblem()
         prob.add_sos_constraint(p1, [x, y])
         prob.add_sos_constraint(p2, [x, y])
-        tv = prob.sym_to_var(t)
-        prob.set_objective('min', tv)
+        prob.set_objective('min', prob.sym_to_var(t))
         prob.solve(solver='mosek')
-        self.assertAlmostEqual(tv.value, 0.24999999503912618)
+        self.assertAlmostEqual(prob.value, 0.24999999503912618)
 
-    def test_unconstrained_poly_opt_sparse(self):
+    def test_unconstrained_poly_opt(self):
         x, y, t = sp.symbols('x y t')
         p = x**4 + x**2 - 3*x**2*y**2 + y**6
         prob = SOSProblem()
         c = prob.add_sos_constraint(p-t, [x, y], sparse=True) # Newton polytope
-        tv = prob.sym_to_var(t)
-        prob.set_objective('max', tv)
-        prob.solve(solver='mosek', verbosity=0)
-        self.assertAlmostEqual(tv.value, -0.17797853649283987)
+        prob.set_objective('max', prob.sym_to_var(t))
+        prob.solve(solver='mosek')
+        self.assertAlmostEqual(prob.value, -0.17797853649283987)
+
+    def test_unconstrained_poly_opt_sparse(self):
+        x, y, z, t = sp.symbols('x y z t')
+        p = x**4*z**2 + x**2*z**4 - 3*x**2*y**2*z**2 + y**6
+        prob = SOSProblem()
+        # Newton polytope reduction
+        c = prob.add_sos_constraint(p-t*z**6, [x, y, z], sparse=True)
+        prob.set_objective('max', prob.sym_to_var(t))
+        prob.solve(solver='mosek')
+        self.assertAlmostEqual(prob.value, -0.17797853649283987)
+        monoms = set([(0, 0, 3), (0, 1, 2), (1, 0, 2), (0, 2, 1),
+                      (1, 1, 1), (2, 0, 1), (0, 3, 0)])
+        self.assertEqual(monoms, set(c.basis.monoms))
 
     def test_isocahedral_form(self):
         x, y, z, t = sp.symbols('x y z t')

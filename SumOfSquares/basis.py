@@ -3,7 +3,6 @@ import numpy as np
 import math
 from collections import defaultdict
 from scipy.spatial import ConvexHull
-from scipy.linalg import orth
 
 from .util import *
 
@@ -63,11 +62,12 @@ class Basis():
                                        is_hom(poly, poly_deg))
         if sparse and len(monoms) >= 3: # Newton polytope sparsity reduction
             a = np.mean(monoms, axis=0)
-            # Project onto affine subspace spanned by monomials
-            proj = lambda m: orth((monoms - a).T).T.dot(m - a)
+            U, U_ = orth(monoms - a) # U orthogonal to U_
+            proj, proj_ = lambda m: U.dot(m - a), lambda m: U_.dot(m - a)
             hull = ConvexHull(np.apply_along_axis(proj, 1, monoms))
-            in_hull = lambda pt: \
-              sum(hull.equations.dot(np.append(proj(pt), 1)) > 1e-9) == 0
+            def in_hull(pt): # Point lies in affine subspace and convex hull
+                return np.linalg.norm(proj_(pt)) < 1e-9 and \
+                    sum(hull.equations.dot(np.append(proj(pt), 1)) > 1e-9) == 0
             return Basis(list(filter(in_hull, full_basis.monoms)))
         return full_basis
 

@@ -1,4 +1,5 @@
 import sympy as sp
+import numpy as np
 from operator import mul
 from functools import reduce
 from itertools import combinations
@@ -27,3 +28,7 @@ def round_sympy_expr(expr, precision=3):
 def poly_degree(p, variables):
     '''Returns the max degree of P when treated as a polynomial in VARIABLES'''
     return sp.poly(p, variables).total_degree()
+
+def orth(M):
+    _, D, V = np.linalg.svd(M)
+    return V[D >= 1e-9], V[D < 1e-9]

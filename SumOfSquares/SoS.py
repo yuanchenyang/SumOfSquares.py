@@ -175,7 +175,7 @@ class SOSConstraint:
         '''Returns L, the Cholesky factorization of Q = LL^T. Adds a small
         multiple of identity to Q if it has small negative eigenvalues.
         '''
-        mineig = min(min(np.linalg.eig(self.Qval)[0]), 0)
+        mineig = min(min(np.linalg.eigh(self.Qval)[0]), 0)
         return np.linalg.cholesky(self.Qval - np.eye(len(self.basis))*mineig*1.1)
 
     def get_sos_decomp(self, precision=3):

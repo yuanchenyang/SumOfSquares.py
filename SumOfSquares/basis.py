@@ -25,7 +25,8 @@ def basis_inhom(n, d):
     degree d, represented as a list of tuples (same as sympy), so that:
     len(list(basis(n,d))) == binom(n+d, d)
     '''
-    return (b[:-1] for b in basis_hom(n+1, d))
+    for b in basis_hom(n+1, d):
+        yield b[:-1]
 
 class Basis():
     def __init__(self, monoms):

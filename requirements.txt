@@ -1,4 +1,0 @@
-sympy
-numpy
-scipy
-picos

@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+src/SumOfSquares/SoS.py
+src/SumOfSquares/__init__.py
+src/SumOfSquares/basis.py
+src/SumOfSquares/util.py
+src/SumOfSquares_yuanchenyang.egg-info/PKG-INFO
+src/SumOfSquares_yuanchenyang.egg-info/SOURCES.txt
+src/SumOfSquares_yuanchenyang.egg-info/dependency_links.txt
+src/SumOfSquares_yuanchenyang.egg-info/top_level.txt

@@ -1,0 +1,30 @@
+Metadata-Version: 2.1
+Name: SumOfSquares-yuanchenyang
+Version: 1.2
+Summary: Python implementation of Sum-of-Squares optimization built on picos
+Home-page: https://github.com/yuanchenyang/SumOfSquares.py
+Author: Chenyang Yuan
+Author-email: yuanchenyang@gmail.com
+License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/yuanchenyang/SumOfSquares.py/issues
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+SumOfSquares.py
+---------------
+
+Sum of squares optimization built on top of
+[picos](https://picos-api.gitlab.io/picos/). Easy access to pseudoexpectation
+operators for both formulating problems and extracting solutions via rounding
+algorithms.
+
+[Examples](https://sums-of-squares.github.io/sos/index.html#python)
+
+(Detailed documentation coming soon)
+
+

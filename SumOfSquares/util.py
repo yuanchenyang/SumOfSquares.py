@@ -1,5 +1,6 @@
 import sympy as sp
 import numpy as np
+import math
 from operator import mul
 from functools import reduce
 from itertools import combinations
@@ -32,3 +33,13 @@ def poly_degree(p, variables):
 def orth(M):
     _, D, V = np.linalg.svd(M)
     return V[D >= 1e-9], V[D < 1e-9]
+
+def get_poly_degree(vars, polys, deg=None):
+    '''Given a vector of polynomials POLY, return minimum degree to run sum of
+    squares, or check if DEG is above such minimum degree if provided'''
+    max_deg = max(map(lambda p: poly_degree(p, vars), polys))
+    if deg is None:
+        deg = math.ceil(max_deg/2)
+    if 2*deg < max_deg:
+        raise ValueError(f'Degree of relaxation 2*{deg} less than maximum degree {max_deg}')
+    return deg

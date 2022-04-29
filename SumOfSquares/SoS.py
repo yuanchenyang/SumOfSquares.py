@@ -5,6 +5,7 @@ import numpy as np
 from picos import Problem
 from collections import defaultdict
 from operator import floordiv, and_
+from itertools import combinations
 
 from .util import *
 from .basis import Basis, poly_variable
@@ -22,6 +23,10 @@ class SOSProblem(Problem):
         self._sos_constraints = {}
         self._sos_const_count = 0
         self._pexpect_count = 0
+
+    def __getitem__(self, sym):
+        assert isinstance(sym, sp.Symbol), f'{s} must be a sympy symbol!'
+        return self.sym_to_var(sym)
 
     def sym_to_var(self, sym):
         '''Map between a sympy symbol to a unique picos variable. As sympy
@@ -116,36 +121,77 @@ class SOSProblem(Problem):
             return self.sp_mat_to_picos(basis.sos_sym_poly_repr(poly)) | X
         return pexpect
 
-def poly_opt_prob(vars, obj, eqs=None, ineqs=None, deg=None, sparse=True):
-    '''Formulates and returns a degree DEG Sum-of-Squares relaxation of a
-    polynomial optimization problem in variables VARS that mininizes OBJ
-    subject to equality constraints EQS (g(x) = 0) and inequality constraints
-    INEQS (h(x) >= 0). SPARSE uses Newton polytope reduction to do computations
-    in a reduced-size basis. Returns an instance of SOSProblem.
+def poly_opt_prob(vars, obj, eqs=None, ineqs=None, ineq_prods=False, deg=None, sparse=False):
+    '''Formulates and returns a degree DEG Sum-of-Squares relaxation of a polynomial
+    optimization problem in variables VARS that mininizes OBJ subject to
+    equality constraints EQS (g(x) = 0) and inequality constraints INEQS (h(x)
+    >= 0). INEQ_PRODS determines if products of inequalities are used. SPARSE
+    uses Newton polytope reduction to do computations in a reduced-size
+    basis. Returns an instance of SOSProblem.
+
     '''
     prob = SOSProblem()
     gamma = sp.symbols('gamma')
     gamma_p = prob.sym_to_var(gamma)
     eqs, ineqs = eqs or [], ineqs or []
-
-    max_deg = max(map(lambda p: sp.poly(p, vars).total_degree(), [obj] + eqs + ineqs))
-    if deg is None:
-        deg = math.ceil(max_deg/2)
-    if 2*deg < max_deg:
-        raise ValueError(f'Degree of relaxation 2*{deg} less than maximum degree {max_deg}')
-
+    deg = get_poly_degree(vars, [obj] + eqs + ineqs, deg=deg)
 
     f = 0 # obviously non-negative polynomial for (in)equalities constraints
     for i, eq in enumerate(eqs):
         p = poly_variable(f'c{i}', vars, 2*deg - poly_degree(eq, vars))
         f += p * eq
     for i, ineq in enumerate(ineqs):
-        s = poly_variable(f'd{i}', vars, 2*deg - poly_degree(eq, vars))
+        s = poly_variable(f'd{i}', vars, (2*deg - poly_degree(ineq, vars))//2*2)
         prob.add_sos_constraint(s, vars, name=f'd{i}', sparse=sparse)
         f += s * ineq
 
+    if ineq_prods:
+        for r in range(len(ineqs)):
+            for comb in combinations(ineqs, r):
+                total_deg = sum(map(lambda p: sp.poly(p, vars).total_degree(), comb))
+                if total_deg <= 2*deg:
+                    s = poly_variable(f'e{i}', vars, (2*deg - total_deg)//2*2)
+                    prob.add_sos_constraint(s, vars, name=f'e{i}', sparse=sparse)
+                    f += s * prod(comb)
+
     prob.add_sos_constraint(obj - gamma - f, vars, sparse=sparse)
     prob.set_objective('max', gamma_p)
+    return prob
+
+def poly_cert_prob(vars, poly, eqs=None, ineqs=None, ineq_prods=False, deg=None, sparse=False):
+    '''Formulates and returns a degree DEG Sum-of-Squares relaxation of a polynomial
+    optimization problem in variables VARS that certifies POLY is a sum of
+    squares on the set defined by EQS and INEQS. INEQ_PRODS determines if
+    products of inequalities are used. SPARSE uses Newton polytope reduction to
+    do computations in a reduced-size basis. Returns an instance of SOSProblem.
+
+    '''
+    prob = SOSProblem()
+    eqs, ineqs = eqs or [], ineqs or []
+    deg = get_poly_degree(vars, [poly] + eqs + ineqs, deg=deg)
+
+    f = 0 # obviously non-negative polynomial for (in)equalities constraints
+    for i, eq in enumerate(eqs):
+        p = poly_variable(f'c{i}', vars, 2*deg - poly_degree(eq, vars))
+        f += p * eq
+
+    if ineq_prods:
+        i = 0
+        for r in range(len(ineqs)):
+            for comb in combinations(ineqs, r):
+                total_deg = sum(map(lambda p: sp.poly(p, vars).total_degree(), comb))
+                if total_deg <= 2*deg:
+                    s = poly_variable(f'e{i}', vars, (2*deg - total_deg)//2*2)
+                    prob.add_sos_constraint(s, vars, name=f'e{i}', sparse=sparse)
+                    f += s * prod(comb)
+                    i += 1
+    else:
+        for i, ineq in enumerate(ineqs):
+            s = poly_variable(f'd{i}', vars, (2*deg - poly_degree(ineq, vars))//2*2)
+            prob.add_sos_constraint(s, vars, name=f'd{i}', sparse=sparse)
+            f += s * ineq
+
+    prob.add_sos_constraint(poly - f, vars, sparse=sparse)
     return prob
 
 class SOSConstraint:

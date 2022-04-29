@@ -65,8 +65,8 @@ class TestSoS(unittest.TestCase):
         tv = prob.sym_to_var(t)
         prob.set_objective('min', 2*sv + tv)
         prob.solve(solver='mosek')
-        self.assertAlmostEqual(sv.value, 1.0991855923132654)
-        self.assertAlmostEqual(tv.value, 1.349190696633841)
+        self.assertAlmostEqual(sv.value, 1.0991922234972025, 4)
+        self.assertAlmostEqual(tv.value, 1.3491774310708642, 4)
 
     def test_multiple_sos(self):
         x, y, t = sp.symbols('x y t')
@@ -77,7 +77,7 @@ class TestSoS(unittest.TestCase):
         prob.add_sos_constraint(p2, [x, y])
         prob.set_objective('min', prob.sym_to_var(t))
         prob.solve(solver='mosek')
-        self.assertAlmostEqual(prob.value, 0.24999999503912618)
+        self.assertAlmostEqual(prob.value, 0.24999999503912618, 5)
 
     def test_unconstrained_poly_opt(self):
         x, y, t = sp.symbols('x y t')
@@ -86,7 +86,7 @@ class TestSoS(unittest.TestCase):
         c = prob.add_sos_constraint(p-t, [x, y], sparse=True) # Newton polytope
         prob.set_objective('max', prob.sym_to_var(t))
         prob.solve(solver='mosek')
-        self.assertAlmostEqual(prob.value, -0.17797853649283987)
+        self.assertAlmostEqual(prob.value, -0.17797853649283987, 5)
 
     def test_unconstrained_poly_opt_sparse(self):
         x, y, z, t = sp.symbols('x y z t')
@@ -96,7 +96,7 @@ class TestSoS(unittest.TestCase):
         c = prob.add_sos_constraint(p-t*z**6, [x, y, z], sparse=True)
         prob.set_objective('max', prob.sym_to_var(t))
         prob.solve(solver='mosek')
-        self.assertAlmostEqual(prob.value, -0.17797853649283987)
+        self.assertAlmostEqual(prob.value, -0.17797853649283987, 5)
         monoms = set([(0, 0, 3), (0, 1, 2), (1, 0, 2), (0, 2, 1),
                       (1, 1, 1), (2, 0, 1), (0, 3, 0)])
         self.assertEqual(monoms, set(c.basis.monoms))
@@ -111,11 +111,11 @@ class TestSoS(unittest.TestCase):
         tv = prob.sym_to_var(t)
         prob.set_objective('min', tv)
         prob.solve(solver='mosek')
-        self.assertAlmostEqual(tv.value, 0.8472135957347698)
+        self.assertAlmostEqual(tv.value, 0.8472135957347698, 5)
 
         # Test pseudoexpectations
         self.assertAlmostEqual(c.pexpect((x**2 + y**2 + z**2)**3), 1)
-        self.assertAlmostEqual(c.pexpect(f), 0.8472135957347698)
+        self.assertAlmostEqual(c.pexpect(f), 0.8472135957347698, 5)
 
     def test_chebyshev(self):
         # Compute leading coefficient of Chebyshev polynomials
@@ -134,7 +134,7 @@ class TestSoS(unittest.TestCase):
 
         prob.set_objective('max', prob.sym_to_var(gam))
         prob.solve(solver='mosek')
-        self.assertAlmostEqual(prob.value, 127.99999971712037)
+        self.assertAlmostEqual(prob.value, 127.99999971712037, 5)
 
     def test_pexpect(self):
         x, y, z = sp.symbols('x y z')
@@ -147,7 +147,7 @@ class TestSoS(unittest.TestCase):
         prob.add_constraint(PEx(x2**3) == 1)
         prob.set_objective('max', PEx(f))
         prob.solve(solver='mosek')
-        self.assertAlmostEqual(PEx(f), 0.8472136281136226)
+        self.assertAlmostEqual(PEx(f), 0.8472136281136226, 5)
 
     def test_pexpect_cert(self):
         # Pseudoexpectation certificate
@@ -157,23 +157,55 @@ class TestSoS(unittest.TestCase):
         pEx = prob.get_pexpect([x, y], 6)
         prob.add_constraint(pEx(p) == -1)
         prob.solve()
-        self.assertAlmostEqual(pEx(p), -1)
+        self.assertAlmostEqual(pEx(p), -1, 7)
 
     def test_eq_constrained_poly_opt(self):
         x, y = sp.symbols('x y')
-        prob = poly_opt_prob([x, y], x - y, [x**2-x, y**2-y], [], 1)
+        prob = poly_opt_prob([x, y], x - y,
+                             eqs=[x**2-x, y**2-y],
+                             ineqs=[],
+                             deg=1)
         prob.solve(solver='mosek')
-        self.assertAlmostEqual(prob.value, -1.0000000022528606)
+        self.assertAlmostEqual(prob.value, -1.0000000022528606, 5)
 
     def test_ineq_constrained_poly_opt(self):
         x, y = sp.symbols('x y')
-        prob1 = poly_opt_prob([x, y], x + y, [x**2+y**2-1, y-x**2-0.5], [x, y-0.5], 1)
+        prob1 = poly_opt_prob([x, y], x + y,
+                              eqs=[x**2+y**2-1, y-x**2-0.5],
+                              ineqs=[x, y-0.5],
+                              deg=1)
         prob1.solve(solver='mosek')
-        self.assertAlmostEqual(prob1.value, 0.49999999888338087)
+        self.assertAlmostEqual(prob1.value, 0.49999999888338087, 5)
 
-        prob2 = poly_opt_prob([x, y], x + y, [x**2+y**2-1, y-x**2-0.5], [x, y-0.5], 2)
+        prob2 = poly_opt_prob([x, y], x + y,
+                              eqs=[x**2+y**2-1, y-x**2-0.5],
+                              ineqs=[x, y-0.5],
+                              deg=2)
         prob2.solve(solver='mosek')
-        self.assertAlmostEqual(prob2.value, 1.3910970905754896)
+        self.assertAlmostEqual(prob2.value, 1.3910970905754896, 5)
+
+    def test_poly_cert_set_eq(self):
+        x, y = sp.symbols('x y')
+        # Psatz for infeasibility of {x^2+y^2=1, y^3+x=2}
+        prob1 = poly_cert_prob([x,y], -1, eqs=[x**2, y**2, x+y-1], deg=2)
+        prob1.solve()
+
+        # Psatz for infeasibility of {x^2+y^2=1, y^3+x=2}
+        prob2 = poly_cert_prob([x,y], -1, eqs=[x**2+y**2-1, y**3+x-2], deg=2)
+        prob2.solve()
+
+    def test_poly_cert_set_ineq(self):
+        x, y = sp.symbols('x y')
+
+        # Certify x*y nonnegative on set {x>=0, y>=0, x+y<=1}
+        prob1 = poly_cert_prob([x,y], x*y, ineqs=[x, y, 1-x-y], ineq_prods=True, deg=1)
+        prob1.solve()
+
+        # Infeasible when products of inequalities are not considered
+        prob2 = poly_cert_prob([x,y], x*y, ineqs=[x, y, 1-x-y], ineq_prods=False, deg=1)
+        with self.assertRaises(pic.SolutionFailure):
+            prob2.solve()
+
 
 
 if __name__ == '__main__':

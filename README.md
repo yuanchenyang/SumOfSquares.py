@@ -1,5 +1,9 @@
 SumOfSquares.py
 ---------------
+| **Documentation** | **Build Status** |
+|:-----------------:|:----------------:|
+| [![][docs-latest-img]][docs-latest-url] | [![Build Status][build-img]][build-url] |
+
 
 Sum of squares optimization built on top of
 [picos](https://picos-api.gitlab.io/picos/). Easy access to pseudoexpectation
@@ -33,3 +37,8 @@ Matrix([
 ```
 
 [More Examples](https://sums-of-squares.github.io/sos/index.html#python)
+
+[docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-latest-url]: https://sums-of-squares.github.io/sos/index.html#python
+[build-img]: https://github.com/yuanchenyang/SumOfSquares.py/workflows/CI/badge.svg?branch=master
+[build-url]: https://github.com/yuanchenyang/SumOfSquares.py/actions?query=workflow%3ACI

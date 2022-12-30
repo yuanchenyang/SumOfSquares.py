@@ -81,6 +81,9 @@ class TestSoS(unittest.TestCase):
                       (1, 1, 1), (2, 0, 1), (0, 3, 0)])
         self.assertEqual(monoms, set(c.basis.monoms))
 
+    def test_quadratic_coeffs(self):
+        pass
+
     def test_isocahedral_form(self):
         x, y, z, t = sp.symbols('x y z t')
         phi = (1+np.sqrt(5))/2

@@ -19,3 +19,4 @@ __pycache__
 /build/
 /dist/
 src/SumOfSquares.egg-info/
+.venv

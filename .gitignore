@@ -20,3 +20,5 @@ __pycache__
 /dist/
 src/SumOfSquares.egg-info/
 .venv
+.coverage
+htmlcov

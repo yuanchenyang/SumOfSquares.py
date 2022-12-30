@@ -4,7 +4,7 @@ build:
 	python -m build
 
 test:
-	pytest
+	pytest --cov-report=html --cov=SumOfSquares
 
 upload:
 	python -m twine upload --repository pypi dist/*

@@ -7,6 +7,9 @@ from SumOfSquares import *
 
 class TestSoS(unittest.TestCase):
 
+    def setUp(self):
+        self.solver = 'cvxopt'
+
     def test_sos_simple(self):
         x, y = sp.symbols('x y')
         p1 = 2*x**4 + 2*x**3*y - x**2*y**2 + 5*y**4        # SoS
@@ -16,7 +19,7 @@ class TestSoS(unittest.TestCase):
         prob = SOSProblem()
         c = prob.add_sos_constraint(p1, [x, y])
         self.assertTrue(c.basis.is_hom)
-        prob.solve()
+        prob.solve(solver=self.solver)
 
         # Extract SoS decomposition
         S = c.get_sos_decomp()
@@ -26,11 +29,11 @@ class TestSoS(unittest.TestCase):
         c = prob.add_sos_constraint(p2, [x, y])
         self.assertFalse(c.basis.is_hom)
         with self.assertRaises(pic.SolutionFailure):
-            prob.solve()
+            prob.solve(solver=self.solver)
 
         prob = SOSProblem()
         c = prob.add_sos_constraint(p3, [x, y])
-        prob.solve()
+        prob.solve(solver=self.solver)
 
     def test_sos_opt(self):
         x, y, s, t = sp.symbols('x y s t')
@@ -41,7 +44,7 @@ class TestSoS(unittest.TestCase):
         sv = prob.sym_to_var(s)
         tv = prob.sym_to_var(t)
         prob.set_objective('min', 2*sv + tv)
-        prob.solve(solver='mosek')
+        prob.solve(solver=self.solver)
         self.assertAlmostEqual(sv.value, 1.0991922234972025, 4)
         self.assertAlmostEqual(tv.value, 1.3491774310708642, 4)
 
@@ -53,7 +56,7 @@ class TestSoS(unittest.TestCase):
         prob.add_sos_constraint(p1, [x, y])
         prob.add_sos_constraint(p2, [x, y])
         prob.set_objective('min', prob.sym_to_var(t))
-        prob.solve(solver='mosek')
+        prob.solve(solver=self.solver)
         self.assertAlmostEqual(prob.value, 0.24999999503912618, 5)
 
     def test_unconstrained_poly_opt(self):
@@ -62,7 +65,7 @@ class TestSoS(unittest.TestCase):
         prob = SOSProblem()
         c = prob.add_sos_constraint(p-t, [x, y], sparse=True) # Newton polytope
         prob.set_objective('max', prob.sym_to_var(t))
-        prob.solve(solver='mosek')
+        prob.solve(solver=self.solver)
         self.assertAlmostEqual(prob.value, -0.17797853649283987, 5)
 
     def test_unconstrained_poly_opt_sparse(self):
@@ -72,7 +75,7 @@ class TestSoS(unittest.TestCase):
         # Newton polytope reduction
         c = prob.add_sos_constraint(p-t*z**6, [x, y, z], sparse=True)
         prob.set_objective('max', prob.sym_to_var(t))
-        prob.solve(solver='mosek')
+        prob.solve(solver=self.solver)
         self.assertAlmostEqual(prob.value, -0.17797853649283987, 5)
         monoms = set([(0, 0, 3), (0, 1, 2), (1, 0, 2), (0, 2, 1),
                       (1, 1, 1), (2, 0, 1), (0, 3, 0)])
@@ -87,7 +90,7 @@ class TestSoS(unittest.TestCase):
         c = prob.add_sos_constraint(p, [x, y, z])
         tv = prob.sym_to_var(t)
         prob.set_objective('min', tv)
-        prob.solve(solver='mosek')
+        prob.solve(solver=self.solver)
         self.assertAlmostEqual(tv.value, 0.8472135957347698, 5)
 
         # Test pseudoexpectations
@@ -110,7 +113,7 @@ class TestSoS(unittest.TestCase):
         prob.add_sos_constraint(p+1 + (x+1)*(x-1)*t2, [x])
 
         prob.set_objective('max', prob.sym_to_var(gam))
-        prob.solve(solver='mosek')
+        prob.solve(solver=self.solver)
         self.assertAlmostEqual(prob.value, 127.99999971712037, 5)
 
     def test_pexpect(self):
@@ -123,7 +126,7 @@ class TestSoS(unittest.TestCase):
         PEx = prob.get_pexpect([x, y, z], 6, hom=True)
         prob.add_constraint(PEx(x2**3) == 1)
         prob.set_objective('max', PEx(f))
-        prob.solve(solver='mosek')
+        prob.solve(solver=self.solver)
         self.assertAlmostEqual(PEx(f), 0.8472136281136226, 5)
 
     def test_pexpect_cert(self):
@@ -133,7 +136,7 @@ class TestSoS(unittest.TestCase):
         prob = SOSProblem()
         pEx = prob.get_pexpect([x, y], 6)
         prob.add_constraint(pEx(p) == -1)
-        prob.solve()
+        prob.solve(solver=self.solver)
         self.assertAlmostEqual(pEx(p), -1, 7)
 
     def test_eq_constrained_poly_opt(self):
@@ -142,7 +145,7 @@ class TestSoS(unittest.TestCase):
                              eqs=[x**2-x, y**2-y],
                              ineqs=[],
                              deg=1)
-        prob.solve(solver='mosek')
+        prob.solve(solver=self.solver)
         self.assertAlmostEqual(prob.value, -1.0000000022528606, 5)
 
     def test_ineq_constrained_poly_opt(self):
@@ -151,39 +154,37 @@ class TestSoS(unittest.TestCase):
                               eqs=[x**2+y**2-1, y-x**2-0.5],
                               ineqs=[x, y-0.5],
                               deg=1)
-        prob1.solve(solver='mosek')
+        prob1.solve(solver=self.solver)
         self.assertAlmostEqual(prob1.value, 0.49999999888338087, 5)
 
         prob2 = poly_opt_prob([x, y], x + y,
                               eqs=[x**2+y**2-1, y-x**2-0.5],
                               ineqs=[x, y-0.5],
                               deg=2)
-        prob2.solve(solver='mosek')
+        prob2.solve(solver=self.solver)
         self.assertAlmostEqual(prob2.value, 1.3910970905754896, 5)
 
     def test_poly_cert_set_eq(self):
         x, y = sp.symbols('x y')
         # Psatz for infeasibility of {x^2+y^2=1, y^3+x=2}
         prob1 = poly_cert_prob([x,y], -1, eqs=[x**2, y**2, x+y-1], deg=2)
-        prob1.solve()
+        prob1.solve(solver=self.solver)
 
         # Psatz for infeasibility of {x^2+y^2=1, y^3+x=2}
         prob2 = poly_cert_prob([x,y], -1, eqs=[x**2+y**2-1, y**3+x-2], deg=2)
-        prob2.solve()
+        prob2.solve(solver=self.solver)
 
     def test_poly_cert_set_ineq(self):
         x, y = sp.symbols('x y')
 
         # Certify x*y nonnegative on set {x>=0, y>=0, x+y<=1}
         prob1 = poly_cert_prob([x,y], x*y, ineqs=[x, y, 1-x-y], ineq_prods=True, deg=1)
-        prob1.solve()
+        prob1.solve(solver=self.solver)
 
         # Infeasible when products of inequalities are not considered
         prob2 = poly_cert_prob([x,y], x*y, ineqs=[x, y, 1-x-y], ineq_prods=False, deg=1)
         with self.assertRaises(pic.SolutionFailure):
-            prob2.solve()
-
-
+            prob2.solve(solver=self.solver)
 
 if __name__ == '__main__':
     unittest.main()

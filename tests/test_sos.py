@@ -41,12 +41,10 @@ class TestSoS(unittest.TestCase):
             - y**4 - x**2 - y**2 + 1
         prob = SOSProblem()
         prob.add_sos_constraint(p, [x, y])
-        sv = prob.sym_to_var(s)
-        tv = prob.sym_to_var(t)
-        prob.set_objective('min', 2*sv + tv)
+        prob.set_objective('min', 2*prob[s] + prob[t])
         prob.solve(solver=self.solver)
-        self.assertAlmostEqual(sv.value, 1.0991922234972025, 4)
-        self.assertAlmostEqual(tv.value, 1.3491774310708642, 4)
+        self.assertAlmostEqual(prob[s].value, 1.0991922234972025, 4)
+        self.assertAlmostEqual(prob[t].value, 1.3491774310708642, 4)
 
     def test_multiple_sos(self):
         x, y, t = sp.symbols('x y t')
@@ -55,7 +53,7 @@ class TestSoS(unittest.TestCase):
         prob = SOSProblem()
         prob.add_sos_constraint(p1, [x, y])
         prob.add_sos_constraint(p2, [x, y])
-        prob.set_objective('min', prob.sym_to_var(t))
+        prob.set_objective('min', prob[t])
         prob.solve(solver=self.solver)
         self.assertAlmostEqual(prob.value, 0.24999999503912618, 5)
 
@@ -64,7 +62,7 @@ class TestSoS(unittest.TestCase):
         p = x**4 + x**2 - 3*x**2*y**2 + y**6
         prob = SOSProblem()
         c = prob.add_sos_constraint(p-t, [x, y], sparse=True) # Newton polytope
-        prob.set_objective('max', prob.sym_to_var(t))
+        prob.set_objective('max', prob[t])
         prob.solve(solver=self.solver)
         self.assertAlmostEqual(prob.value, -0.17797853649283987, 5)
 
@@ -74,15 +72,12 @@ class TestSoS(unittest.TestCase):
         prob = SOSProblem()
         # Newton polytope reduction
         c = prob.add_sos_constraint(p-t*z**6, [x, y, z], sparse=True)
-        prob.set_objective('max', prob.sym_to_var(t))
+        prob.set_objective('max', prob[t])
         prob.solve(solver=self.solver)
         self.assertAlmostEqual(prob.value, -0.17797853649283987, 5)
         monoms = set([(0, 0, 3), (0, 1, 2), (1, 0, 2), (0, 2, 1),
                       (1, 1, 1), (2, 0, 1), (0, 3, 0)])
         self.assertEqual(monoms, set(c.basis.monoms))
-
-    def test_quadratic_coeffs(self):
-        pass
 
     def test_isocahedral_form(self):
         x, y, z, t = sp.symbols('x y z t')
@@ -91,13 +86,12 @@ class TestSoS(unittest.TestCase):
         p = t * (x**2 + y**2 + z**2)**3 - f
         prob = SOSProblem()
         c = prob.add_sos_constraint(p, [x, y, z])
-        tv = prob.sym_to_var(t)
-        prob.set_objective('min', tv)
+        prob.set_objective('min', prob[t])
         prob.solve(solver=self.solver)
-        self.assertAlmostEqual(tv.value, 0.8472135957347698, 5)
+        self.assertAlmostEqual(prob[t].value, 0.8472135957347698, 5)
 
         # Test pseudoexpectations
-        self.assertAlmostEqual(c.pexpect((x**2 + y**2 + z**2)**3), 1)
+        self.assertAlmostEqual(c.pexpect((1.0*x**2 + y**2 + z**2)**3), 1)
         self.assertAlmostEqual(c.pexpect(f), 0.8472135957347698, 5)
 
     def test_chebyshev(self):
@@ -115,7 +109,7 @@ class TestSoS(unittest.TestCase):
         prob.add_sos_constraint(1-p + (x+1)*(x-1)*t1, [x])
         prob.add_sos_constraint(p+1 + (x+1)*(x-1)*t2, [x])
 
-        prob.set_objective('max', prob.sym_to_var(gam))
+        prob.set_objective('max', prob[gam])
         prob.solve(solver=self.solver)
         self.assertAlmostEqual(prob.value, 127.99999971712037, 5)
 

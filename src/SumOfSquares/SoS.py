@@ -47,8 +47,6 @@ class SOSProblem(Problem):
             return sum(map(self.sp_to_picos, expr.args))
         elif expr.func == sp.Mul:
             return prod(map(self.sp_to_picos, expr.args))
-        elif expr.func == sp.Pow:
-            breakpoint()
         else:
             return pic.Constant(float(expr))
 

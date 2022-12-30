@@ -145,16 +145,19 @@ def poly_opt_prob(vars, obj, eqs=None, ineqs=None, ineq_prods=False, deg=None, s
         prob.add_sos_constraint(s, vars, name=f'd{i}', sparse=sparse)
         f += s * ineq
 
+    i = 0
     if ineq_prods:
         for r in range(len(ineqs)):
             for comb in combinations(ineqs, r):
                 total_deg = sum(map(lambda p: sp.poly(p, vars).total_degree(), comb))
                 if total_deg <= 2*deg:
                     s = poly_variable(f'e{i}', vars, (2*deg - total_deg)//2*2)
+                    i += 1
                     prob.add_sos_constraint(s, vars, name=f'e{i}', sparse=sparse)
                     f += s * prod(comb)
 
-    prob.add_sos_constraint(obj - gamma - f, vars, sparse=sparse)
+    # Much faster after using sp.expand
+    prob.add_sos_constraint(sp.expand(obj - gamma - f), vars, sparse=sparse)
     prob.set_objective('max', gamma_p)
     return prob
 

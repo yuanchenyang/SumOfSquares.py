@@ -22,7 +22,7 @@ jobs:
           pip install pytest pytest-cov
       - name: Install package and dependencies
         run: |
-          pip install -e .
+          pip install -e .[ConvexHull]
       - name: Test with pytest
         run: |
           pytest --doctest-modules --cov-report=xml --cov-report=html --cov=SumOfSquares

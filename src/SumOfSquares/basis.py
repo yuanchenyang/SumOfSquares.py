@@ -2,7 +2,6 @@ import sympy as sp
 import numpy as np
 import math
 from collections import defaultdict
-from scipy.spatial import ConvexHull
 
 from .util import *
 
@@ -62,6 +61,10 @@ class Basis():
         full_basis = Basis.from_degree(len(poly.gens), math.ceil(poly_deg / 2),
                                        is_hom(poly, poly_deg))
         if sparse and len(monoms) >= 3: # Newton polytope sparsity reduction
+            try:
+                from scipy.spatial import ConvexHull
+            except ImportError:
+                raise ImportError('Convex hull calculation requires scipy.spatial installed')
             a = np.mean(monoms, axis=0)
             U, U_ = orth(monoms - a) # U orthogonal to U_
             proj, proj_ = lambda m: U.dot(m - a), lambda m: U_.dot(m - a)

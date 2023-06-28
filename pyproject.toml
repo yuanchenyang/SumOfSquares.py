@@ -45,6 +45,7 @@ dependencies = [
 [project.optional-dependencies] # Optional
 #dev = []
 test = ["pytest", "pytest-cov"]
+build = ["build", "twine"]
 ConvexHull = ["scipy"]
 
 [build-system]

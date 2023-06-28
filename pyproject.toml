@@ -1,3 +1,52 @@
+[project]
+name = "SumOfSquares"
+version = "1.2.2"
+description = "Python implementation of Sum-of-Squares optimization built on picos"
+readme = "README.md"
+requires-python = ">=3.6"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Chenyang Yuan", email = "yuanchenyang@gmail.com" }
+]
+maintainers = [
+  {name = "Chenyang Yuan", email = "yuanchenyang@gmail.com" }
+]
+
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 4 - Beta",
+
+  # Pick your license as you wish
+  "License :: OSI Approved :: MIT License",
+
+  # Specify the Python versions you support here. In particular, ensure
+  # that you indicate you support Python 3. These classifiers are *not*
+  # checked by "pip install". See instead "python_requires" below.
+  "Programming Language :: Python :: 3",
+
+  "Operating System :: OS Independent",
+]
+
+dependencies = [
+  "numpy",
+  "sympy",
+  "picos",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yuanchenyang/SumOfSquares.py"
+"Bug Tracker" = "https://github.com/yuanchenyang/SumOfSquares.py/issues"
+"Documentation" = "https://sums-of-squares.github.io/sos/index.html#python"
+"Source" = "https://github.com/yuanchenyang/SumOfSquares.py"
+
+[project.optional-dependencies] # Optional
+#dev = []
+test = ["pytest", "pytest-cov"]
+ConvexHull = ["scipy"]
+
 [build-system]
 requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"

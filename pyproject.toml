@@ -43,9 +43,8 @@ dependencies = [
 "Source" = "https://github.com/yuanchenyang/SumOfSquares.py"
 
 [project.optional-dependencies] # Optional
-#dev = []
+dev = ["build", "twine"]
 test = ["pytest", "pytest-cov"]
-build = ["build", "twine"]
 ConvexHull = ["scipy"]
 
 [build-system]

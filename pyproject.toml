@@ -3,7 +3,7 @@ name = "SumOfSquares"
 version = "1.2.2"
 description = "Python implementation of Sum-of-Squares optimization built on picos"
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 license = {file = "LICENSE"}
 authors = [
   {name = "Chenyang Yuan", email = "yuanchenyang@gmail.com" }

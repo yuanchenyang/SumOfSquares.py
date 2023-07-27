@@ -18,7 +18,7 @@ __pycache__
 /.ipynb_checkpoints/
 /build/
 /dist/
-src/SumOfSquares.egg-info/
+*.egg-info
 .venv
 .coverage
 htmlcov

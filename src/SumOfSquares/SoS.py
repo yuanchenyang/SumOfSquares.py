@@ -25,7 +25,7 @@ class SOSProblem(Problem):
         self._pexpect_count = 0
 
     def __getitem__(self, sym):
-        assert isinstance(sym, sp.Symbol), f'{s} must be a sympy symbol!'
+        assert isinstance(sym, sp.Symbol), f'{sym} must be a sympy symbol!'
         return self.sym_to_var(sym)
 
     def sym_to_var(self, sym):

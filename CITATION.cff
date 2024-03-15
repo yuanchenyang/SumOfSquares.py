@@ -1,0 +1,23 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: SumOfSquares.py
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Chenyang
+    family-names: Yuan
+    email: yuanchenyang@gmail.com
+    affiliation: MIT
+    orcid: 'https://orcid.org/0000-0001-7912-0328'
+repository-code: 'https://github.com/yuanchenyang/SumOfSquares.py'
+url: 'https://sums-of-squares.github.io/sos/index.html#python'
+abstract: ' Python implementation of Sum-of-Squares optimization built on picos. Easy access to pseudoexpectation operators for both formulating problems and extracting solutions via rounding algorithms.'
+keywords:
+  - Sum of squares
+  - Optimization
+  - Modelling tool
+license: MIT

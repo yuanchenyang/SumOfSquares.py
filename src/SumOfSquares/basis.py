@@ -119,8 +119,22 @@ def poly_variable(name: str, variables: List[sp.Symbol], deg: int,
     with a variable (a sympy symbol) named using NAME for each coefficient. Used
     in Sum-of-Squares relaxations for polynomial optimization.
     '''
+    if hom and deg == 0:
+        return 0
     variables = sorted(variables, key=str) # use lex order
     basis = Basis.from_degree(len(variables), deg, hom=hom)
     coeffs = sp.symbols(f'{name}_:{len(basis)}')
     return sum(coeff * prod(var**power for var, power in zip(variables, monom))
                for monom, coeff in zip(basis, coeffs))
+
+def matrix_variable(name: str, variables: List[sp.Symbol], deg: int, dim: int,
+                    hom: bool=False, sym: bool=True) -> sp.Matrix:
+    '''Returns a (symmetric) matrix variable of size dim x dim'''
+    arr = [[None] * dim for _ in range(dim)]
+    for i in range(dim):
+        for j in range(dim):
+            if j < i and sym:
+                arr[i][j] = arr[j][i]
+            else:
+                arr[i][j] = poly_variable(f'{name}[{i}][{j}]', variables, deg, hom=hom)
+    return sp.Matrix(arr)

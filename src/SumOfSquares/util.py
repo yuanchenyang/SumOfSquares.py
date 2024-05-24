@@ -21,6 +21,8 @@ def sum_tuple(t1: tuple, t2: tuple) -> tuple:
 
 def is_hom(poly: sp.Poly, deg: int) -> bool:
     '''Determines if a polynomial POLY is homogeneous of degree DEG'''
+    if deg == 0:
+        return poly == 0
     return sum(sum(m) != deg for m in poly.monoms()) == 0
 
 def round_sympy_expr(expr: sp.Expr, precision: int=3) -> sp.Expr:

@@ -25,6 +25,7 @@ class SOSProblem(Problem):
         self._sym_var_map = {}
         self._sos_constraints = {}
         self._sos_const_count = 0
+        self._aux_var_count = 0
         self._pexpect_count = 0
 
     def __getitem__(self, sym: sp.Symbol) -> pic.RealVariable:
@@ -39,6 +40,14 @@ class SOSProblem(Problem):
         if sym not in self._sym_var_map:
             self._sym_var_map[sym] = pic.RealVariable(repr(sym))
         return self._sym_var_map[sym]
+
+    def subs_with_sol(self, expr: sp.Expr) -> sp.Expr:
+        ''' Substitute symbols in sympy expression with values obtained from
+        solving the problem'''
+        syms_with_values = [(sym, var.value)
+                            for sym, var in self._sym_var_map.items()
+                            if var.value is not None]
+        return expr.subs(syms_with_values)
 
     def sp_to_picos(self, expr: sp.Expr) -> pic.expressions.Expression:
         '''Converts a sympy affine expression to a picos expression, converting
@@ -89,6 +98,24 @@ class SOSProblem(Problem):
 
         pic_const = self.add_constraint(Q >> 0)
         return SOSConstraint(pic_const, Q, basis, variables, deg)
+
+    def add_matrix_sos_constraint(self, mat: sp.Matrix, variables: List[sp.Symbol],
+                                  name: str='', sparse: bool=False, aux_var_name: str=''
+                                  ) -> SOSConstraint:
+        '''Adds a constraint that MAT is sum of squares. This is done by
+        defining a polynomial (using auxillary variables) that is sum of squares
+        iff MAT is a sum of squares matrix.
+        '''
+        n, m = mat.shape
+        assert n == m, 'Matrix must be square!'
+
+        self._aux_var_count += 1
+        aux_var_name = aux_var_name or f'_y{self._aux_var_count}'
+        aux_vars = list(sp.symbols(f'{aux_var_name}_:{n}'))
+
+        y = sp.Matrix([aux_vars])
+        p = (y @ mat @ y.T)[0] # p is sos iff mat is a sos matrix
+        return self.add_sos_constraint(p, aux_vars + variables, name=name, sparse=sparse)
 
     def get_pexpect(self, variables: List[sp.Symbol], deg:int,
                     hom: bool=False, name: str=''

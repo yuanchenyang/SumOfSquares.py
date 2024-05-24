@@ -183,5 +183,34 @@ class TestSoS(unittest.TestCase):
         with self.assertRaises(pic.SolutionFailure):
             prob2.solve(solver=self.solver)
 
+    def test_matrix_poly(self):
+        x, y = sp.symbols('x y')
+        n = 3
+        deg = 2
+
+        M = matrix_variable('M', [x, y], deg, n)
+        prob = SOSProblem()
+        prob.add_matrix_sos_constraint(sp.eye(n) - M, [x, y])
+        prob.set_objective('max', prob.sym_to_var(M[0].coeff(x**2)))
+        prob.solve(solver=self.solver)
+        self.assertAlmostEqual(prob.subs_with_sol(M)[0].coeff(x**2), 0, 7)
+
+        P = sp.Matrix([ [x**2-x*x+2, x], [x, x**2]])
+        prob = SOSProblem()
+        const = prob.add_matrix_sos_constraint(P, [x])
+        prob.solve()
+
+    def test_matrix_poly_infeasible(self):
+        x, y, z = sp.symbols('x y z')
+        choi_mat = sp.Matrix([
+            [x**2 + 2*y**2, -x*y         , -x*z         ],
+            [-x*y         , y**2 + 2*z**2, -y*z         ],
+            [-x*z         , -y*z         , z**2 + 2*x**2],
+        ])
+        prob = SOSProblem()
+        const = prob.add_matrix_sos_constraint(choi_mat, [x, y, z])
+        with self.assertRaises(pic.SolutionFailure):
+            prob.solve(solver=self.solver)
+
 if __name__ == '__main__':
     unittest.main()

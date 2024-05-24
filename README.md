@@ -42,3 +42,15 @@ Matrix([
 [docs-latest-url]: https://sums-of-squares.github.io/sos/index.html#python
 [build-img]: https://github.com/yuanchenyang/SumOfSquares.py/workflows/CI/badge.svg?branch=master
 [build-url]: https://github.com/yuanchenyang/SumOfSquares.py/actions?query=workflow%3ACI
+
+### Citation
+If you use this library in your work, please consider citing:
+
+```
+@software{Yuan_SumOfSquares_py,
+author = {Yuan, Chenyang},
+license = {MIT},
+title = {{SumOfSquares.py}},
+url = {https://github.com/yuanchenyang/SumOfSquares.py}
+}
+```

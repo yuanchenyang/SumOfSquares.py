@@ -1,11 +1,14 @@
+from __future__ import annotations # for type hinting Basis
+
 import sympy as sp
 import numpy as np
 import math
 from collections import defaultdict
+from typing import Iterable, Tuple, List
 
 from .util import *
 
-def basis_hom(n, d):
+def basis_hom(n: int, d: int) -> Iterable[Tuple[int]]:
     '''Generator for a homogeneous polynomial basis for n variables of degree d,
     represented as a list of tuples (same as sympy), so that:
     len(list(basis_hom(n,d))) == binom(n+d-1, d)
@@ -19,7 +22,7 @@ def basis_hom(n, d):
             for b in basis_hom(n-1, di):
                 yield b + (d-di,)
 
-def basis_inhom(n, d):
+def basis_inhom(n: int, d: int) -> Iterable[Tuple[int]]:
     '''Generator for an inhomogeneous polynomial basis for n variables of
     degree d, represented as a list of tuples (same as sympy), so that:
     len(list(basis(n,d))) == binom(n+d, d)
@@ -28,7 +31,7 @@ def basis_inhom(n, d):
         yield b[:-1]
 
 class Basis():
-    def __init__(self, monoms):
+    def __init__(self, monoms: List[Tuple[int]]):
         '''Initializes a basis using a sequence of tuples representing monomials
         '''
         self.monoms = monoms
@@ -43,17 +46,17 @@ class Basis():
             for j, bj in enumerate(self):
                  self.sos_sym_entries[sum_tuple(bi, bj)].append((i, j))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.monoms)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[Tuple[int]]:
         return iter(self.monoms)
 
-    def from_degree(nvars, deg, hom=False):
+    def from_degree(nvars: int, deg: int, hom: bool=False) -> Basis:
         '''Constructs a basis by specifying the number of variables and degree'''
         return Basis(list((basis_hom if hom else basis_inhom)(nvars, deg)))
 
-    def from_poly_lex(poly, sparse=True):
+    def from_poly_lex(poly: sp.Poly, sparse: bool=True) -> Basis:
         '''Returns a basis from a polynomial compatible with SoS,
         ordering monomials in lexicographic order'''
         poly_deg = poly.total_degree()
@@ -75,14 +78,14 @@ class Basis():
             return Basis(list(filter(in_hull, full_basis.monoms)))
         return full_basis
 
-    def to_sym(self, syms):
+    def to_sym(self, syms: List[sp.Expr]) -> List[sp.Expr]:
         '''Convert basis to a list of symbolic monomials
         '''
         if self.nvars != len(syms):
             raise ValueError('Mismatched basis size!')
         return [prod(s**m for s,m in zip(syms, mono)) for mono in self]
 
-    def check_can_represent(self, poly):
+    def check_can_represent(self, poly: sp.Poly):
         '''Check if sympy polynomial POLY can be represented by this basis.
         Raises an error otherwise.'''
         if poly.total_degree() > self.deg * 2:
@@ -97,7 +100,7 @@ class Basis():
                              ' are not in basis!')
 
 
-    def sos_sym_poly_repr(self, poly):
+    def sos_sym_poly_repr(self, poly: sp.Poly) -> sp.Matrix:
         '''Given a polynomial p, returns a SoS-symmetric representation
         Qp where p(x) = b(x)^T Qp b(x), in terms of this basis.
         Qp is returned as a sympy matrix.
@@ -110,7 +113,8 @@ class Basis():
         return Qp
 
 
-def poly_variable(name, variables, deg, hom=False):
+def poly_variable(name: str, variables: List[sp.Symbol], deg: int,
+                  hom: bool=False) -> sp.Expr:
     '''Returns a (possibly homogeneous) degree DEG polynomial in VARIABLES,
     with a variable (a sympy symbol) named using NAME for each coefficient. Used
     in Sum-of-Squares relaxations for polynomial optimization.

@@ -1,3 +1,5 @@
+from __future__ import annotations # for type hinting
+
 import math
 import picos as pic
 import sympy as sp
@@ -6,6 +8,7 @@ from picos import Problem
 from collections import defaultdict
 from operator import floordiv, and_
 from itertools import combinations
+from typing import List, Optional
 
 from .util import *
 from .basis import Basis, poly_variable
@@ -24,11 +27,11 @@ class SOSProblem(Problem):
         self._sos_const_count = 0
         self._pexpect_count = 0
 
-    def __getitem__(self, sym):
+    def __getitem__(self, sym: sp.Symbol) -> pic.RealVariable:
         assert isinstance(sym, sp.Symbol), f'{sym} must be a sympy symbol!'
         return self.sym_to_var(sym)
 
-    def sym_to_var(self, sym):
+    def sym_to_var(self, sym: sp.Symbol) -> pic.RealVariable:
         '''Map between a sympy symbol to a unique picos variable. As sympy
         symbols are hashable, each symbol is assigned a unique picos variable.
         A new picos variable is created if it previously doesn't exist.
@@ -37,7 +40,7 @@ class SOSProblem(Problem):
             self._sym_var_map[sym] = pic.RealVariable(repr(sym))
         return self._sym_var_map[sym]
 
-    def sp_to_picos(self, expr):
+    def sp_to_picos(self, expr: sp.Expr) -> pic.expressions.Expression:
         '''Converts a sympy affine expression to a picos expression, converting
         numeric values to floats, and sympy symbols to picos variables.
         '''
@@ -50,7 +53,7 @@ class SOSProblem(Problem):
         else:
             return pic.Constant(float(expr))
 
-    def sp_mat_to_picos(self, mat):
+    def sp_mat_to_picos(self, mat: sp.Matrix) -> pic.expressions.Expression:
         '''Converts a sympy matrix a picos affine expression, converting
         numeric values to floats, and sympy symbols to picos variables.
         '''
@@ -59,7 +62,8 @@ class SOSProblem(Problem):
         return reduce(floordiv, [reduce(and_, map(self.sp_to_picos, mat.row(r)))
                                  for r in range(num_rows)])
 
-    def add_sos_constraint(self, expr, variables, name='', sparse=False):
+    def add_sos_constraint(self, expr: sp.Expr, variables: List[sp.Symbol],
+                           name: str='', sparse: bool=False) -> SOSConstraint:
         '''Adds a constraint that the polynomial EXPR is a Sum-of-Squares. EXPR
         is a sympy expression treated as a polynomial in VARIABLES. Any symbols
         in EXPR not in VARIABLES are converted to picos variables
@@ -86,7 +90,9 @@ class SOSProblem(Problem):
         pic_const = self.add_constraint(Q >> 0)
         return SOSConstraint(pic_const, Q, basis, variables, deg)
 
-    def get_pexpect(self, variables, deg, hom=False, name=''):
+    def get_pexpect(self, variables: List[sp.Symbol], deg:int,
+                    hom: bool=False, name: str=''
+                    ) -> Callable[[sp.Expr], pic.expressions.Expression]:
         '''Returns a degree DEG pseudoexpectation operator. This operator is a
         function that takes in a polynomial of at most degree DEG in VARIABLES,
         and returns a picos affine expression. If HOM=True, this polynomial must
@@ -121,7 +127,13 @@ class SOSProblem(Problem):
             return self.sp_mat_to_picos(basis.sos_sym_poly_repr(poly)) | X
         return pexpect
 
-def poly_opt_prob(vars, obj, eqs=None, ineqs=None, ineq_prods=False, deg=None, sparse=False):
+def poly_opt_prob(vars       : List[sp.Symbol],
+                  obj        : sp.Expr,
+                  eqs        : Optional[List[sp.Expr]] = None,
+                  ineqs      : Optional[List[sp.Expr]] = None,
+                  ineq_prods : bool = False,
+                  deg        : Optional[int] = None,
+                  sparse     : bool = False) -> SOSProblem:
     '''Formulates and returns a degree DEG Sum-of-Squares relaxation of a polynomial
     optimization problem in variables VARS that mininizes OBJ subject to
     equality constraints EQS (g(x) = 0) and inequality constraints INEQS (h(x)
@@ -161,7 +173,13 @@ def poly_opt_prob(vars, obj, eqs=None, ineqs=None, ineq_prods=False, deg=None, s
     prob.set_objective('max', gamma_p)
     return prob
 
-def poly_cert_prob(vars, poly, eqs=None, ineqs=None, ineq_prods=False, deg=None, sparse=False):
+def poly_cert_prob(vars       : List[sp.Symbol],
+                   poly       : sp.Expr,
+                   eqs        : Optional[List[sp.expr]] = None,
+                   ineqs      : Optional[List[sp.expr]] = None,
+                   ineq_prods : bool = False,
+                   deg        : Optional[int] = None,
+                   sparse     : bool = False) -> SOSProblem:
     '''Formulates and returns a degree DEG Sum-of-Squares relaxation of a polynomial
     optimization problem in variables VARS that certifies POLY is a sum of
     squares on the set defined by EQS and INEQS. INEQ_PRODS determines if
@@ -203,7 +221,12 @@ class SOSConstraint:
     and its dual, and allows one to compute the pseudoexpectation of any
     polynomial.
     '''
-    def __init__(self, pic_const, Q, basis, symbols, deg):
+    def __init__(self,
+                 pic_const: pic.constraints.Constraint,
+                 Q        : pic.expressions.variables.SymmetricVariable,
+                 basis    : Basis,
+                 symbols  : List[sp.Symbol],
+                 deg      : int):
         self.pic_const = pic_const
         self.Q = Q
         self.basis = basis
@@ -220,21 +243,21 @@ class SOSConstraint:
                              ' (is the problem solved?)')
         return self.Q.value
 
-    def get_chol_factor(self):
+    def get_chol_factor(self) -> np.array:
         '''Returns L, the Cholesky factorization of Q = LL^T. Adds a small
         multiple of identity to Q if it has small negative eigenvalues.
         '''
         mineig = min(min(np.linalg.eigh(self.Qval)[0]), 0)
         return np.linalg.cholesky(self.Qval - np.eye(len(self.basis))*mineig*1.1)
 
-    def get_sos_decomp(self, precision=3):
+    def get_sos_decomp(self, precision: int=3) -> sp.Matrix:
         '''Returns a vector containing the sum of squares decompositon of this
         constraint'''
         L = sp.Matrix(self.get_chol_factor())
         S = (L.T @ sp.Matrix(self.b_sym)).applyfunc(lambda x: x**2)
         return round_sympy_expr(S, precision)
 
-    def pexpect(self, expr):
+    def pexpect(self, expr: sp.Expr) -> sp.Expr:
         '''Computes the pseudoexpectation of a given polynomial EXPR'''
         poly = sp.poly(expr, self.symbols)
         self.basis.check_can_represent(poly)
